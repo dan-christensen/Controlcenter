@@ -1,0 +1,14 @@
+#!/bin/bash
+a_flag="true"
+
+while getopts 'a' flag; do
+  case "${flag}" in
+    a) a_flag='false' ;;
+  esac
+done
+
+a=$($a_flag && echo "" || echo "-a")
+
+../../scripts/./pull $a
+../../scripts/./stop $a
+../../scripts/./start $a

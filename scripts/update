@@ -1,0 +1,69 @@
+#!/bin/bash
+h_flag=''
+q_flag=''
+a_flag='true'
+container=''
+
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+source $DIR/../config/config
+if [ -f "$HOME/.config/controlcenter/config" ];then
+	source $HOME/.config/controlcenter/config
+fi
+
+print_container_name () {
+	echo "========================================="
+	echo "Updating: "$container
+	echo "========================================="
+}
+
+run_subcommand_update () {
+   if [ -f "$AVAILABLE/$container/scripts/update" ];then
+       cd $AVAILABLE/$container/scripts && ./update $1
+   else
+      $C_SCRIPTS/./update $1
+   fi 
+}
+
+while getopts 'hqac:' flag; do
+  case "${flag}" in
+    h) h_flag='true' ;;
+    q) q_flag='true' ;;
+    a) a_flag='false' ;;
+    c) container="${OPTARG}" ;;
+  esac
+done
+
+a=$($a_flag && echo "" || echo "-a")
+
+if [ $h_flag ]
+then
+    echo -e "Usage:\n -c container: 'container name' (optional)\n -h help: display the help message\n -q quit: does not show the banner\n -a ansi: does not show ansi control characters"
+elif [ -z $container ]
+then
+    for d in $ENABLED/*/ ; do (cd "$d" && print_container_name ${PWD##*/} && run_subcommand_update $a && echo ""); done
+else
+    if [ -d "$ENABLED/$container" ]
+    then
+	if [ ! $q_flag ]
+	then
+    	    print_container_name
+	fi
+        cd $ENABLED/$container && run_subcommand_update $a
+	if [ ! $q_flag ]
+	then
+	    echo ""
+	fi
+    fi
+fi
+echo "========================================="
+echo "Cleaning up Images"
+echo "========================================="
+docker image prune -f
+echo "========================================="
+echo "Cleaning up Volumes"
+echo "========================================="
+docker volume prune -f
+if [ ! $q_flag ]
+then
+    echo ""
+fi

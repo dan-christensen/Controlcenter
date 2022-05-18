@@ -1,0 +1,10 @@
+#!/bin/bash
+a_flag="true"
+
+while getopts 'a' flag; do
+  case "${flag}" in
+    a) a_flag='false' ;;
+  esac
+done
+
+docker-compose $($a_flag && echo "" || echo "--no-ansi") down

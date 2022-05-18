@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#
+# Purpose - creates a new container
+#  $1 -> container name
+#
+function create_new_container() {
+	local container=$1
+	if [ ! -z $container ]; then
+		if [ -d $AVAILABLE/$container ]; then
+			display_msgbox 10 40 "Error" "ERROR: A container with the name \"$container\" already exists."
+			log "ERROR: A container with the name \"$container\" already exists."
+		else
+			local exclusions="--exclude scripts"
+			dialog --keep-window --defaultno --title "Copy scripts" --yesno "Copy scripts folder?" 5 50
+			local s_flag_res=$?
+			case $s_flag_res in
+				0) exclusions='';;
+			esac
+			(cd $AVAILABLE && rsync -r TEMPLATE/ $container $exclusions)
+			display_msgbox 7 50 "Create container" "Successfully created the container \"$container\""
+			log "Successfully created the container \"$container\""
+		fi
+	fi
+}

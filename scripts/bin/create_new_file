@@ -1,0 +1,31 @@
+#!/bin/bash
+
+#
+# Purpose - creat a new file
+#  $1 -> container name
+#
+function create_new_file() {
+	local container=$1
+
+	display_inputbox 8 40 "New File" "Enter the file name"
+	local file=$(<$INPUT)
+	if [[ $(sed -n '$=' $INPUT) -gt 0 ]]; then
+		if [ -f $AVAILABLE/$container/$file ]; then
+			display_msgbox 7 50 "Error" "ERROR: The file \"$file\" already exists."
+			log "ERROR: the file name \"$file\" already exists for container \"$container\""
+		else
+			local o_flag=false
+			(cd $AVAILABLE/$container && install -D /dev/null $file)
+			dialog --keep-window --defaultno --title "Open file" --yesno "Open file when finished?" 5 50
+			local o_flag_res=$?
+			case $o_flag_res in
+				0) o_flag=true;;
+			esac
+			display_msgbox 7 50 "Create new file" "Successfully created file \"$file\""
+			log "Successfully created file \"$file\" for container \"$container\""
+			if $o_flag; then
+				open_to_edit_file $container $file
+			fi
+		fi
+	fi	
+}

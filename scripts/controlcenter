@@ -1,0 +1,221 @@
+#!/bin/bash
+
+LINK_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+FILE_DIR=$(readlink -f $LINK_DIR/'controlcenter')
+DIR=$(dirname $FILE_DIR)
+
+v_flag="false"
+while getopts 'v' flag; do
+  case "${flag}" in
+    v) v_flag='true' ;;
+  esac
+done
+
+clear_console () {
+    if [ $v_flag == 'false' ]
+    then
+        clear
+    fi
+}
+
+update () {
+    local container=$(get_enabled_containers true)
+    c_flag="-c $container"
+    case "$container" in
+        all) c_flag="";;
+        *) ;;
+    esac
+    if [ ! $container == "back" ]
+    then
+        $DIR/./update $c_flag
+    fi
+    clear_console
+}
+
+start () {
+    local container=$(get_enabled_containers true)
+    c_flag="-c $container"
+    case "$container" in
+        all) c_flag="";;
+        *) ;;
+    esac
+    if [ ! $container == "back" ]
+    then
+        $DIR/./start $c_flag
+    fi
+    clear_console
+}
+
+stop () {
+    local container=$(get_enabled_containers true)
+    c_flag="-c $container"
+    case "$container" in
+        all) c_flag="";;
+        *) ;;
+    esac
+    if [ ! $container == "back" ]
+    then
+        $DIR/./stop $c_flag
+    fi
+    clear_console
+}
+
+restart () {
+    allowall="true"
+    local container=$(get_enabled_containers true)
+    c_flag="-c $container"
+    case "$container" in
+        all) c_flag="";;
+        *) ;;
+    esac
+    if [ ! $container == "back" ]
+    then
+        $DIR/./restart $c_flag
+    fi
+    clear_console
+}
+
+pull () {
+    allowall="true"
+    local container=$(get_enabled_containers true)
+    c_flag="-c $container"
+    case "$container" in
+        all) c_flag="";;
+        *) ;;
+    esac
+    if [ ! $container == "back" ]
+    then
+        $DIR/./pull $c_flag
+    fi
+    clear_console
+}
+
+enable () {
+    local container=$(get_available_containers)
+    if [ ! $container == "back" ]
+        then
+        now="n"
+        force="n"
+
+        n_flag=""
+        read -p "Enable now (y/n): " now
+        case "$now" in
+            n) n_flag="";;
+            y) n_flag="-n";;
+            *) echo "Invalid answer, defaulting to 'n'";;
+        esac
+
+        f_flag=""
+        read -p "Force enable? (disable then reneable) (y/n): " force
+        case "$force" in
+            n) f_flag="";;
+            y) f_flag="-f";;
+            *) echo "Invalid answer, defaulting to 'n'";;
+        esac
+        $DIR/./enable -c $container $n_flag $f_flag
+    fi
+    clear_console
+}
+
+disable () {
+    local container=$(get_enabled_containers "false")
+    if [ ! $container == "back" ]
+    then
+        $DIR/./disable -c $container
+    fi
+    clear_console
+}
+
+get_enabled_containers () {
+    cd $DIR/../containers/enabled
+    shopt -s dotglob
+    shopt -s nullglob
+    temp_array=(*)
+    array=()
+    if [ "$1" = true ]
+    then
+    	array+=(back all)
+    else
+    	array+=(back)
+    fi
+    for value in "${temp_array[@]}"
+    do
+        if [ $value != .gitkeep ]
+        then
+	    array+=($value)
+        fi
+    done
+    PS3="Select a container: "
+    COLUMNS=0
+    select d in "${array[@]}"; do
+    	echo "${d}"
+    	break;
+    done
+}
+
+get_available_containers () {
+    cd $DIR/../containers/available
+    shopt -s dotglob
+    shopt -s nullglob
+    temp_array=(*)
+    array=()
+    array+=( "back" )
+    for value in "${temp_array[@]}"
+    do
+        if [ $value != TEMPLATE ] && [ $value != .gitkeep ]
+        then
+	    array+=($value)
+        fi
+    done
+    unset temp_array
+    PS3="Select a container: "
+    COLUMNS=0
+    select dir in "${array[@]}"; do
+    	echo "${dir}"
+    	break;
+    done
+}
+
+clear
+
+while true; do
+    PS3="Select an operation: "
+    COLUMNS=0
+    options=("update" "start" "stop" "restart" "pull" "enable" "disable" "quit")
+    select opt in "${options[@]}"; do
+        case $opt in
+            update)
+		update;
+		break
+	        ;;
+	    start)
+		start;
+		break
+	        ;;
+	    stop)
+		stop;
+		break
+	        ;;
+	    restart)
+		restart;
+		break
+	        ;;
+	    pull)
+		pull;
+		break
+	        ;;
+	    enable)
+		enable;
+		break
+	        ;;
+	    disable)
+		disable;
+		break
+	        ;;
+	    quit)
+	        break 2;;
+	    *)
+	        echo "Invalid option $opt";;
+        esac
+    done
+done

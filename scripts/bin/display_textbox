@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#
+# Purpose - display textbox
+#  $1 -> set file
+#  $2 -> set height
+#  $3 -> set width
+#  $4 -> set title
+#
+function display_textbox(){
+	local f=${1-LOG}
+	local h=${2-50}
+	local w=${3-60}
+	local t=${4-Output}
+	if [ ! -f "$f" ];then
+		display_msgbox 7 70 "" "The file \"${f}\" is empty."
+	fi
+	dialog --title "${t}" --keep-window --exit-label "BacK" --textbox "${f}" ${h} ${w}
+}

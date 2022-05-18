@@ -1,0 +1,57 @@
+#!/bin/bash
+h_flag=''
+q_flag=''
+a_flag='true'
+container=''
+
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+source $DIR/../config/config
+if [ -f "$HOME/.config/controlcenter/config" ];then
+	source $HOME/.config/controlcenter/config
+fi
+
+print_container_name () {
+	echo "========================================="
+	echo "Restarting: "$container
+	echo "========================================="
+}
+
+run_subcommand_restart () {
+   if [ -f "$AVAILABLE/$container/scripts/restart" ];then
+       cd $AVAILABLE/$container/scripts && ./restart $1
+   else
+      $C_SCRIPTS/./restart $1
+   fi 
+}
+
+while getopts 'hqac:' flag; do
+  case "${flag}" in
+    h) h_flag='true' ;;
+    q) q_flag='true' ;;
+    a) a_flag='false' ;;
+    c) container="${OPTARG}" ;;
+  esac
+done
+
+a=$($a_flag && echo "" || echo "-a")
+
+if [ $h_flag ]
+then
+    echo -e "Usage:\n -c container: 'container name' (optional)\n -h help: display the help message\n -q quit: does not show the banner\n -a ansi: does not show ansi control characters"
+elif [ -z $container ]
+then
+    for d in $ENABLED/*/ ; do (cd "$d" && print_container_name ${PWD##*/} && run_subcommand_restart $a && echo ""); done
+else
+    if [ -d "$ENABLED/$container" ]
+    then
+	if [ ! $q_flag ]
+	then
+    	    print_container_name
+	fi
+        cd $ENABLED/$container && run_subcommand_restart $a
+	if [ ! $q_flag ]
+	then
+	    echo ""
+	fi
+    fi
+fi

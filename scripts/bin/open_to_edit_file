@@ -1,0 +1,12 @@
+#!/bin/bash
+
+#
+# Purpose - edits the selected container file
+#  $1 -> container name
+#  $2 -> file name
+#
+function open_to_edit_file() {
+	local container=$1
+	local file=$2
+	(cd $AVAILABLE/$container && $vi_editor $file)
+}

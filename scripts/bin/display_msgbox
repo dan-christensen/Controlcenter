@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#
+# Purpose - display msgbox
+#  $1 -> set height
+#  $2 -> set width
+#  $3 -> set title
+#  $4 -> set message
+#
+function display_msgbox(){
+	local h=${1-10}			# box height default 10
+	local w=${2-40} 		# box width default 41
+	local t=${3-Output}     	# box title 
+	local m=${4-Message}		# box message
+	dialog --title "${t}" --clear --msgbox "${m}" ${h} ${w} || break
+}
+

@@ -1,0 +1,248 @@
+#!/bin/bash
+LINK_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+FILE_DIR=$(readlink -f $LINK_DIR/'controlcenter')
+DIR=$(dirname $FILE_DIR)
+
+source $DIR/../config/config
+if [ -f "$HOME/.config/controlcenter/config" ];then
+	source $HOME/.config/controlcenter/config
+fi
+
+# Source all files in bin
+for FILE in $SCRIPTS/bin/* ; do source $FILE ; done
+
+# Check folders are created
+[ -d $INTERMEDIATE_FILES ] || mkdir -p $INTERMEDIATE_FILES
+[ -d $LOG_FILES ] || mkdir -p $LOG_FILES
+
+# trap and delete temp files
+trap "rm $OUTPUT; rm $INPUT; rm $LOG; exit" SIGHUP SIGINT SIGTERM
+
+# get text editor or fall back to vi_editor
+vi_editor=${EDITOR-vi}
+
+function update() {
+	while true
+	do
+		get_enabled_containers
+		display_checklist 15 50 10 "Update"
+		run_subcommand update
+	done
+}
+
+function start() {
+	while true
+	do
+		get_enabled_containers
+		display_checklist 15 50 10 "Start"
+		run_subcommand start
+	done
+}
+
+function stop() {
+	while true
+	do
+		get_enabled_containers
+		display_checklist 15 50 10 "Stop"
+		run_subcommand stop
+	done
+}
+
+function restart() {
+	while true
+	do
+		get_enabled_containers
+		display_checklist 15 50 10 "Restart"
+		run_subcommand restart
+	done
+}
+
+function pull() {
+	while true
+	do
+		get_enabled_containers
+		display_checklist 15 50 10 "Pull"
+		run_subcommand pull
+	done
+}
+
+function enable() {
+	while true
+	do
+		local n_flag=''
+		local f_flag=''
+		local enabled=''
+		get_enabled_containers
+		enabled=$(<$OUTPUT)
+		get_available_containers
+		while read line; do
+			if grep -q $line <<< $enabled; then
+				sed -i "/$line/s/^/(EN)/" $OUTPUT
+			fi
+		done <$OUTPUT
+		display_checklist 15 50 10 "Enable"
+		if [[ $(sed -n '$=' $INPUT) -gt 0 ]]; then
+			dialog --keep-window --title "Enable now" --yesno "Enable now?" 5 50
+			n_flag_res=$?
+			case $n_flag_res in
+				0) n_flag='-n';;
+				1) n_flag='';;
+				*) n_flag='';;
+			esac
+			dialog --keep-window --defaultno --title "Force enable" --yesno "Force enable (disable, then reneable)?" 5 50
+			f_flag_res=$?
+			case $f_flag_res in
+				0) f_flag='-f';;
+				1) f_flag='';;
+				*) f_flag='';;
+			esac
+		fi
+		while read line; do
+			$SCRIPTS/./enable -a $n_flag $f_flag -c $line 2>&1
+			log "Subcommand \"enable\" ran for \"$line\" with flags: \"$n_flag\" \"$f_flag\""
+		done <$INPUT | dialog --keep-window --progressbox 50 60
+	done
+}
+
+function disable() {
+	while true
+	do
+		get_enabled_containers
+		display_checklist 15 50 10 "Disable"
+		run_subcommand disable
+	done
+}
+
+function new() {
+	while true
+	do
+		display_inputbox 8 40 "New Container" "Enter the container name"
+		create_new_container $(<$INPUT)
+		break;
+	done
+}
+
+function edit() {
+	while true
+	do
+		get_available_containers
+		display_radiolist 15 50 10 "Edit"
+		local container=$(<$INPUT)
+	
+		if [[ $(sed -n '$=' $INPUT) -gt 0 ]]; then
+			while true
+			do
+				dialog --keep-window --no-items \
+				--title "Edit Menu" \
+ 				--cancel-label "Back" \
+				--menu "Select Function" 10 50 10 \
+				"Existing File"  \
+				"New File" 2> "${INPUT}" || break
+		
+				local menuitem=$(<"${INPUT}")
+			
+				case $menuitem in
+					"Existing File") edit_existing_file $container;;
+					"New File") create_new_file $container;;
+				esac
+			done
+		fi
+	done
+}
+
+function delete() {
+	while true
+	do
+		get_available_containers
+		display_radiolist 15 50 10 "Delete"
+		local container=$(<$INPUT)
+		delete_container $container
+	done
+}
+
+function logs() {
+	while true
+	do
+		dialog --keep-window --no-items \
+		--title "View Logs Menu" \
+ 		--cancel-label "Back" \
+		--menu "Select Function" 10 50 10 \
+		"Current Logs" \
+		"Stored Logs" \
+		"Purge Stored Logs" 2> "${INPUT}" || break
+	
+		local menuitem=$(<"${INPUT}")
+	
+		if [[ $menuitem == "Current Logs" ]]; then
+			display_textbox "$LOG" 50 60 "Logs"
+		elif [[ $menuitem == "Stored Logs" ]]; then
+			get_stored_logs
+			if [[ $(sed -n '$=' $OUTPUT) -gt 0 ]]; then
+				display_radiolist 15 70 10 "Select File"
+		
+				menuitem=$(<"${INPUT}")
+
+				if [ ! -z "$menuitem" ]; then
+				display_textbox "$LOG_FILES/$menuitem" 50 60 "Logs"
+				fi
+			else
+				display_msgbox 7 50 "Stored Logs" "There are no stored logs"
+			fi
+		elif [[ $menuitem == "Purge Stored Logs" ]]; then
+			local p_flag=false
+			dialog --keep-window --defaultno --title "Confirm purge" --yesno "Are you sure you want to purge all files?" 7 50
+			local p_flag_res=$?
+			case $p_flag_res in
+				0) p_flag=true;;
+			esac
+			if $p_flag; then
+					(cd $LOG_FILES && rm *.log)
+					display_msgbox 7 50 "Purge Logs" "Successfully purged all stored logs"
+					log "Successfully purged all stored logs"
+			fi
+		fi
+	done
+}
+
+while true
+do
+
+	dialog --keep-window --no-items --cancel-label "Exit" \
+	--title "Controlcenter" \
+	--menu "Select Function" 18 50 10 \
+	Update \
+	Start  \
+	Stop  \
+	Restart  \
+	Pull  \
+	Enable  \
+	Disable  \
+	New  \
+	Edit \
+	Delete \
+	Logs 2> "${INPUT}" || break
+	
+	menuitem=$(<"${INPUT}")
+	
+	case $menuitem in
+		Update) update;;
+		Start) start;;
+		Stop) stop;;
+		Restart) restart;;
+		Pull) pull;;
+		Enable) enable;;
+		Disable) disable;;
+		New) new;;
+		Edit) edit;;
+		Delete) delete;;
+		Logs) logs;;
+	esac
+
+done
+
+current_date=$(date "+%Y.%m.%d-%H.%M.%S")
+
+[ -f $OUTPUT ] && rm $OUTPUT
+[ -f $INPUT ] && rm $INPUT
+[ -f $LOG ] && cp $LOG "${LOG_FILES}/controlcenter-ui.${current_date}.log" && rm $LOG
+clear

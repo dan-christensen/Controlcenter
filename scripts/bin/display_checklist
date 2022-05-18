@@ -1,0 +1,28 @@
+#!/bin/bash
+
+#
+# Purpose - display checkbox
+#  $1 -> set height
+#  $2 -> set width
+#  $3 -> set number of items
+#  $4 -> set title
+#  $5 -> set on or off
+#
+function display_checklist(){
+	local h=${1-10}
+	local w=${2-40}
+	local n=${3-10}
+	local t=${4-Output}
+	local o=${5-off}
+	local temp_output=$(sed "s/$/ $o/" $OUTPUT)
+	dialog --title "${t}" --keep-window --no-items --extra-button --extra-label "Select All" --cancel-label "Back" --checklist "" ${h} ${w} ${n} ${temp_output} 2>"${INPUT}"
+	case $? in
+		1) break;;
+		3) display_checklist $h $w $n $t "on";;
+	esac
+	log "Checklist returned: $(<$INPUT)"
+	sed -i 's/"\\(EN\\)//g' $INPUT
+	sed -i 's/"//g' $INPUT
+	sed -i 's/ /\n/g' $INPUT
+	sed -i '$a\' $INPUT
+}

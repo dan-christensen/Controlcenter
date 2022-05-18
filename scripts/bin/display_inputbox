@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#
+# Purpose - display inputbox
+#  $1 -> set height
+#  $2 -> set width
+#  $3 -> set title
+#  $4 -> set message
+#
+function display_inputbox(){
+	local h=${1-8}
+	local w=${2-40}
+	local t=${3-Output}
+	local m=${4-Message}
+	dialog --title "${t}" --keep-window --inputbox "${m}" ${h} ${w} 2>"${INPUT}" || break
+	log "Inputbox returned: $(<$INPUT)"
+}

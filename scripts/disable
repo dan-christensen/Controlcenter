@@ -1,0 +1,48 @@
+#!/bin/bash
+h_flag=''
+q_flag=''
+a_flag='true'
+container=''
+
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+source $DIR/../config/config
+if [ -f "$HOME/.config/controlcenter/config" ];then
+	source $HOME/.config/controlcenter/config
+fi
+
+print_container_name () {
+	echo "========================================="
+	echo "Disabling: "$container
+	echo "========================================="
+}
+
+while getopts 'hqac:' flag; do
+  case "${flag}" in
+    h) h_flag='true' ;;
+    q) q_flag='true' ;;
+    a) a_flag='false' ;;
+    c) container="${OPTARG}" ;;
+  esac
+done
+
+a=$($a_flag && echo "" || echo "-a")
+
+if [ -z "$container" ] || [ $h_flag ]
+then
+    echo -e "Usage:\n -c container: 'container name' (required)\n -h help: display the help message" 
+else
+    if [ -d "$ENABLED/$container" ]
+    then
+ 	if [ ! $q_flag ]
+	then
+	    print_container_name
+	fi
+        $SCRIPTS/./stop -c $container -q $a
+        rm -rf $ENABLED/$container
+        echo "Disabled $container, symlink removed"
+    fi
+fi
+if [ ! $q_flag ]
+then
+    echo ""
+fi

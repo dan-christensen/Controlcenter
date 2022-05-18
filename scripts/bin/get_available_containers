@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#
+# Purpose - sets $OUTPUT to the available containers
+#
+function get_available_containers() {
+	ls $AVAILABLE >$OUTPUT
+	sed -i '/TEMPLATE/d' $OUTPUT
+	log "Available containers: $(<$OUTPUT)"
+}

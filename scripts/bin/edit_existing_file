@@ -1,0 +1,54 @@
+#!/bin/bash
+
+#
+# Purpose - edit an existing file
+#  $1 -> container name
+#
+function edit_existing_file() {
+	while true
+	do
+		local container=$1
+		dialog --keep-window --no-items \
+		--title "Edit Existing File Menu" \
+ 		--cancel-label "Back" \
+		--menu "Select Function" 10 50 10 \
+		"Edit"  \
+		"Rename"  \
+		"Delete" 2> "${INPUT}" || break
+	
+		local menuitem=$(<"${INPUT}")
+	
+		if [ $menuitem = "Edit" ]; then
+			if [ ! -z "$container" ]; then
+				get_container_files $container
+				display_radiolist 15 50 10 "Select File"
+		
+				edit_menuitem=$(<"${INPUT}")
+				if [ ! -z "$edit_menuitem" ]; then
+					open_to_edit_file $container $edit_menuitem
+				fi
+			fi
+		elif [ $menuitem = "Rename" ]; then
+			if [ ! -z "$container" ]; then
+				get_container_files $container
+				display_radiolist 15 50 10 "Select File"
+		
+				rename_menuitem=$(<"${INPUT}")
+				if [ ! -z "$rename_menuitem" ]; then
+					rename_file $container $rename_menuitem
+				fi
+			fi
+		elif [ $menuitem = "Delete" ]; then
+			if [ ! -z "$container" ]; then
+				get_container_files $container
+				display_radiolist 15 50 10 "Select File"
+	
+				delete_menuitem=$(<"${INPUT}")
+				if [ ! -z "$delete_menuitem" ]; then
+					delete_file $container $delete_menuitem
+				fi
+			fi
+		fi
+	done
+}
+

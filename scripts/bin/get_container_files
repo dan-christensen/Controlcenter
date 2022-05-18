@@ -1,0 +1,12 @@
+#!/bin/bash
+
+#
+# Purpose - get a list of editable container files
+#  $1 -> container name
+#
+function get_container_files() {
+	local container=$1
+	(cd $AVAILABLE/$container && find . -type f >$OUTPUT)
+	sed -ir '/^.$/d' $OUTPUT
+	log "Files for container \"$container\": $(<$OUTPUT)"
+}

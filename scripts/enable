@@ -1,0 +1,66 @@
+#!/bin/bash
+n_flag=''
+f_flag=''
+h_flag=''
+q_flag=''
+a_flag='true'
+container=''
+
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+source $DIR/../config/config
+if [ -f "$HOME/.config/controlcenter/config" ];then
+	source $HOME/.config/controlcenter/config
+fi
+
+print_container_name () {
+	echo "========================================="
+	echo "Enabling: "$container
+	echo "========================================="
+}
+
+while getopts 'nfhqac:' flag; do
+  case "${flag}" in
+    n) n_flag='true' ;;
+    f) f_flag='true' ;;
+    h) h_flag='true' ;;
+    q) q_flag='true' ;;
+    a) a_flag='false' ;;
+    c) container="${OPTARG}" ;;
+  esac
+done
+
+a=$($a_flag && echo "" || echo "-a")
+
+if [ -z "$container" ] || [ $h_flag ]
+then
+    echo -e "Usage:\n -c container: 'container name' (required)\n -n now: start now (optional)\n -f force: force a disable before enabling (optional)\n -h help: display the help message" 
+else
+    if [ ! $q_flag ]
+    then
+        print_container_name
+    fi
+    if [ -d "$ENABLED/$container" ] && [ ! $f_flag ]
+    then
+        echo "$container is already enabled"
+    fi
+    if [ -d "$ENABLED/$container" ] && [ $f_flag ]
+    then
+	echo "Disabling $container"
+        $SCRIPTS/./disable -c $container -q $a
+    fi
+
+    if [ ! -d "$ENABLED/$container" ]
+    then
+        ln -s $AVAILABLE/$container $ENABLED/$container
+        echo "Enabled $container, symlink created"
+    fi
+
+    if [ -d "$ENABLED/$container" ] && [ $n_flag ]
+    then
+        $SCRIPTS/./start -c $container -q $a
+    fi
+fi
+if [ ! $q_flag ]
+then
+    echo ""
+fi

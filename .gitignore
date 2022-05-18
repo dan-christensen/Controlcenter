@@ -1,0 +1,7 @@
+*.swp
+
+containers/available/*
+containers/enabled/*
+
+!containers/available/.gitkeep
+!containers/enabled/.gitkeep

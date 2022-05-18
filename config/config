@@ -1,0 +1,39 @@
+######################################################
+###         DO NOT CHANGE THIS CONFIG FILE.        ###
+###    COPY THIS FILE TO YOU HOME CONFIG FOLDER.   ###
+###  i.e. /home/user/.config/controlcenter/config  ###
+### THIS SCRIPT WILL REFERENCE IT THERE BY DEFAULT ###
+######################################################
+
+# Root directory
+ROOT="/opt/dockerconfigs"
+
+# Controlcenter scripts
+SCRIPTS="$ROOT/scripts"
+
+# Containers directory
+CONTAINERS="$ROOT/containers"
+
+# Container scripts
+C_SCRIPTS="$CONTAINERS/scripts"
+
+# Available containers
+AVAILABLE="$CONTAINERS/available"
+
+# Enabled containers
+ENABLED="$CONTAINERS/enabled"
+
+# Log files
+LOG_FILES="/tmp/controlcenter/logs"
+
+# Intermediate files
+INTERMEDIATE_FILES="/tmp/controlcenter/intermediate"
+
+# Input file
+INPUT=$INTERMEDIATE_FILES/input.sh.$$
+
+# Output file
+OUTPUT=$INTERMEDIATE_FILES/output.sh.$$
+
+# Log file
+LOG=$INTERMEDIATE_FILES/log.sh.$$

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#
+# Purpose - runs a specific subcommand
+#  $1 -> subcommand name
+#  $2 -> set height
+#  $3 -> set width
+#
+function run_subcommand() {
+	local c=${1}
+	local h=${2-50}
+	local w=${3-60}
+	while read line; do
+		log "Subcommand \"$c\" ran for \"$line\""
+		$SCRIPTS/./$c -ac $line |& tee -a $LOG
+	done <$INPUT | dialog --keep-window --progressbox ${h} ${w}
+}

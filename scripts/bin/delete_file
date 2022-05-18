@@ -1,0 +1,31 @@
+#!/bin/bash
+
+#
+# Purpose - delete an existing file
+#  $1 -> container name
+#  $2 -> file name
+#
+function delete_file() {
+	local container=$1
+	local file=$2
+
+	display_inputbox 8 50 "Delete File" "Reenter the file name \"$file\" to delete"
+	sed -i '$a\' $INPUT
+	local d_flag=false
+	dialog --keep-window --defaultno --title "Confirm delete" --yesno "Are you sure you want to delete \"$file\"?" 7 50
+	local d_flag_res=$?
+	case $d_flag_res in
+		0) d_flag=true;;
+	esac
+	if $d_flag; then
+		if [ $file = $(<$INPUT) ]; then
+			(cd $AVAILABLE/$container && rm -rf $file)
+			display_msgbox 7 50 "Delete file" "Successfully deleted file \"$file\""
+			log "Deleted file \"$file\" for container \"$container\""
+		else
+			display_msgbox 7 50 "Error" "ERROR: The file names did not match, delete aborted."
+			log "ERROR: the file name \"$file\" did not match any files for container \"$container\""
+		fi
+	fi
+
+}

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+current_date=$(date "+%Y.%m.%d-%H.%M.%S")
+
+#
+# Purpose - logs parameter string
+#  $1 -> set log message
+#
+function log(){
+	local m=${1}		# log message
+	echo "[${current_date}] $(echo ${m} | tr '\n' ' ')" >> $LOG
+	sed -i "s/\r//g" $LOG
+}

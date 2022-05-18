@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#
+# Purpose - display radiolist
+#  $1 -> set height
+#  $2 -> set width
+#  $3 -> set number of items
+#  $4 -> set title
+#
+function display_radiolist(){
+	local h=${1-10}
+	local w=${2-40}
+	local n=${3-10}
+	local t=${4-Output}
+	sed -i "s/$/ off/" $OUTPUT
+	dialog --title "${t}" --keep-window --no-items --cancel-label "Back" --radiolist "" ${h} ${w} ${n} $(<$OUTPUT) 2>"${INPUT}" || break
+	log "Radiolist returned: $(<$INPUT)"
+	sed -i 's/"\\(EN\\)//g' $INPUT
+	sed -i 's/"//g' $INPUT
+	sed -i 's/ /\n/g' $INPUT
+	sed -i '$a\' $INPUT
+}

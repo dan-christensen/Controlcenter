@@ -1,0 +1,28 @@
+#!/bin/bash
+
+#
+# Purpose - deletes the selected container
+#  $1 -> container name
+#
+function delete_container() {
+	local container=$(<$INPUT)
+	display_inputbox 8 40 "Delete Container" "Reenter the container name \"$container\" to delete"
+	sed -i '$a\' $INPUT
+	local d_flag=false
+	dialog --keep-window --defaultno --title "Confirm delete" --yesno "Are you sure you want to delete \"$container\"?" 7 50
+	local d_flag_res=$?
+	case $d_flag_res in
+		0) d_flag=true;;
+	esac
+	if $d_flag; then
+		if [ $container = $(<$INPUT) ]; then
+			run_subcommand disable	
+			(cd $AVAILABLE && rm -rf $container)
+			display_msgbox 7 50 "Delete container" "Successfully deleted container \"$container\""
+			log "Successfully deleted container \"$container\""
+		else
+			display_msgbox 7 50 "Error" "ERROR: The container names did not match, delete aborted."
+			log "ERROR: The container names did not match, aborting deletion of container \"$container\""
+		fi
+	fi
+}

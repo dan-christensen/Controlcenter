@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Purpose - get a list of stored log files
+#
+function get_stored_logs() {
+	(cd $LOG_FILES && find . -type f >$OUTPUT)
+	#if [[ $(sed -n '$=' $OUTPUT) -gt 0 ]]; then
+	sed -ir '/^.$/d' $OUTPUT
+	log "Log files: $(<$OUTPUT)"
+}

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+#
+# Purpose - sets $OUTPUT to the enabled containers
+#
+function get_enabled_containers() {
+	ls $ENABLED >$OUTPUT
+	log "Enabled containers: $(<$OUTPUT)"
+}

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#
+# Purpose - rename an existing file
+#  $1 -> container name
+#  $2 -> file name
+#
+function rename_file() {
+	local container=$1
+	local file=$2
+	display_inputbox 8 40 "Rename File" "Enter the new file name for \"$file\""
+	local new_file_name=$(<$INPUT)
+	(cd $AVAILABLE/$container && mv $file $new_file_name)
+	display_msgbox 7 50 "Rename file" "Successfully renamed file \"$file\""
+	log "Renamed file \"$file\" to \"$new_file_name\" for container \"$container\""
+}
